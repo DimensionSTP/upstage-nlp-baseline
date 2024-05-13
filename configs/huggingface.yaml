@@ -32,6 +32,8 @@ text_max_length: 1024
 lr: 0.00002
 t_max: 50
 eta_min: 0.0000025
+options:
+  max_length: 512
 
 monitor: val_loss
 tracking_direction: min
@@ -62,8 +64,8 @@ resumed_step: 0
 ckpt_path: ${callbacks.model_checkpoint.dirpath}/epoch${epoch}.ckpt
 
 submission_file_name: test
-logit_name: ${save_detail}-epoch${epoch}
-submission_name: ${save_detail}-epoch${epoch}
+logit_name: ${save_detail}-epoch${epoch}-generation_max_length${options.max_length}
+submission_name: ${save_detail}-epoch${epoch}-generation_max_length${options.max_length}
 
 run_name: ${project_name}
 work_dir: ${hydra:runtime.cwd}
