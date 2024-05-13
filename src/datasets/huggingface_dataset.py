@@ -47,6 +47,7 @@ class UpStageDialoguesDataset(Dataset):
         encoded = self.encode_text(self.datas[idx])
         label = self.encode_text(self.labels[idx])["input_ids"]
         encoded["labels"] = label
+        del encoded["token_type_ids"]
         return {
             "encoded": encoded,
             "index": idx,
