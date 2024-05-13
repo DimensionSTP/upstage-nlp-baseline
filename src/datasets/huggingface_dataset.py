@@ -9,7 +9,7 @@ from torch.utils.data import Dataset
 from transformers import AutoTokenizer
 
 
-class KaggleBBCDataset(Dataset):
+class UpStageDialoguesDataset(Dataset):
     def __init__(
         self,
         data_path: str,
@@ -54,22 +54,12 @@ class KaggleBBCDataset(Dataset):
         }
 
     def get_dataset(self) -> Dict[str, List[Any]]:
-        if self.split in ["train", "val"]:
-            csv_path = f"{self.data_path}/train.csv"
+        if self.split in ["train", "test"]:
+            csv_path = f"{self.data_path}/{self.split}.csv"
             data = pd.read_csv(csv_path)
             data = data.fillna("_")
-            train_data, val_data = train_test_split(
-                data,
-                test_size=self.split_ratio,
-                random_state=self.seed,
-                shuffle=True,
-            )
-            if self.split == "train":
-                data = train_data
-            else:
-                data = val_data
-        elif self.split == "test":
-            csv_path = f"{self.data_path}/{self.split}.csv"
+        elif self.split == "val":
+            csv_path = f"{self.data_path}/dev.csv"
             data = pd.read_csv(csv_path)
             data = data.fillna("_")
         elif self.split == "predict":
@@ -96,7 +86,7 @@ class KaggleBBCDataset(Dataset):
                     )
         else:
             raise ValueError(f"Inavalid split: {self.split}")
-        datas = data["articles"].tolist()
+        datas = data["dialogue"].tolist()
         labels = data[self.target_column_name].tolist()
         return {
             "datas": datas,

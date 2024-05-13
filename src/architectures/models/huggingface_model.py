@@ -3,7 +3,11 @@ from typing import Dict
 import torch
 from torch import nn
 
-from transformers import BartForConditionalGeneration
+from transformers import (
+    BartForConditionalGeneration,
+    T5ForConditionalGeneration,
+    AutoModelForCausalLM,
+)
 
 
 class HuggingFaceModel(nn.Module):
@@ -12,10 +16,21 @@ class HuggingFaceModel(nn.Module):
         pretrained_model_name: str,
     ) -> None:
         super().__init__()
-        self.model = BartForConditionalGeneration.from_pretrained(
-            pretrained_model_name,
-            output_hidden_states=False,
-        )
+        if "bart" in pretrained_model_name:
+            self.model = BartForConditionalGeneration.from_pretrained(
+                pretrained_model_name,
+                output_hidden_states=False,
+            )
+        elif "t5" in pretrained_model_name:
+            self.model = T5ForConditionalGeneration.from_pretrained(
+                pretrained_model_name,
+                output_hidden_states=False,
+            )
+        else:
+            self.model = AutoModelForCausalLM.from_pretrained(
+                pretrained_model_name,
+                output_hidden_states=False,
+            )
 
     def forward(
         self,

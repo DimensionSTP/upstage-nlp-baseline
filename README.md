@@ -1,16 +1,16 @@
 # Summary DL pipeline for NLP competition
 
-## For Kaggle NLP competition
+## For Upstage NLP competition
 
 ### Dataset
-Kaggle BBC News Summary dataset(text summarization)
+Upstage NLP competition dataset(dialogue summarization)
 
 ### Quick setup
 
 ```bash
 # clone project
-git clone https://github.com/DimensionSTP/kaggle-bbc-news-summary.git
-cd kaggle-bbc-news-summary
+git clone https://github.com/DimensionSTP/upstage-nlp-baseline.git
+cd upstage-nlp-baseline
 
 # [OPTIONAL] create conda environment
 conda create -n myenv python=3.8
