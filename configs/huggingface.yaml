@@ -46,7 +46,7 @@ strategy: auto
 log_every_n_steps: 10
 precision: 16
 accumulate_grad_batches: 1
-epoch: 1024
+epoch: 100
 
 model_name: HuggingFace
 dataset_name: UpStageDialogues
@@ -58,14 +58,14 @@ hparams_save_path: ${connected_dir}/hparams/${model_name}/${dataset_name}/${num_
 tuned_hparams_path: ${hparams_save_path}/best_params.json
 
 project_name: ${model_name}-${dataset_name}-${mode}
-total_batch_size: bs${batch_size}x${devices}x${accumulate_grad_batches}
-save_detail: ${upload_user}_${model_type}-text_max_length${text_max_length}-precision${precision}-${total_batch_size}
+total_batch_size: bs=${batch_size}x${devices}x${accumulate_grad_batches}
+save_detail: ${upload_user}_${model_type}-text_max_length=${text_max_length}-precision=${precision}-${total_batch_size}
 resumed_step: 0
-ckpt_path: ${callbacks.model_checkpoint.dirpath}/epoch${epoch}.ckpt
+ckpt_path: ${callbacks.model_checkpoint.dirpath}/epoch=${epoch}.ckpt
 
 submission_file_name: test
-logit_name: ${save_detail}-epoch${epoch}-generation_max_length${options.max_length}
-submission_name: ${save_detail}-epoch${epoch}-generation_max_length${options.max_length}
+logit_name: ${save_detail}-epoch=${epoch}-generation_max_length=${options.max_length}
+submission_name: ${save_detail}-epoch=${epoch}-generation_max_length=${options.max_length}
 
 run_name: ${project_name}
 work_dir: ${hydra:runtime.cwd}
