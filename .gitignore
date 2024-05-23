@@ -6,6 +6,8 @@
 *.xml
 *.json
 *.ipynb
+*.tar
+*.tar.gz
 *__pycache__
 logs/runs/
 logs/wandb/
