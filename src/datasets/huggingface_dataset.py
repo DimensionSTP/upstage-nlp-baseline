@@ -13,29 +13,30 @@ class UpStageDialoguesDataset(Dataset):
         self,
         data_path: str,
         split: str,
-        split_ratio: float,
-        seed: int,
         target_column_name: str,
         num_devices: int,
         batch_size: int,
         pretrained_model_name: str,
-        text_max_length: int,
+        data_max_length: int,
+        target_max_length: int,
     ) -> None:
         self.data_path = data_path
         self.split = split
-        self.split_ratio = split_ratio
-        self.seed = seed
         self.target_column_name = target_column_name
         self.num_devices = num_devices
         self.batch_size = batch_size
+        self.pretrained_model_name = pretrained_model_name
         self.data_encoder = AutoTokenizer.from_pretrained(
-            pretrained_model_name,
+            self.pretrained_model_name,
             use_fast=True,
         )
+        if self.data_encoder.pad_token_id is None:
+            self.data_encoder.pad_token_id = self.data_encoder.eos_token_id
         dataset = self.get_dataset()
         self.datas = dataset["datas"]
         self.labels = dataset["labels"]
-        self.text_max_length = text_max_length
+        self.data_max_length = data_max_length
+        self.target_max_length = target_max_length
 
     def __len__(self) -> int:
         return len(self.labels)
@@ -44,9 +45,25 @@ class UpStageDialoguesDataset(Dataset):
         self,
         idx: int,
     ) -> Dict[str, Any]:
-        encoded = self.encode_text(self.datas[idx])
-        label = self.encode_text(self.labels[idx])["input_ids"]
-        encoded["labels"] = label
+        if "bart" in self.pretrained_model_name or "t5" in self.pretrained_model_name:
+            encoded = self.encode_text(
+                data=self.datas[idx],
+                data_type="data",
+            )
+            label = self.encode_text(
+                data=self.labels[idx],
+                data_type="target",
+            )["input_ids"]
+            encoded["labels"] = label
+        else:
+            prompt = self.generate_prompt(
+                data=self.datas[idx],
+                label=self.labels[idx],
+            )
+            encoded = self.encode_text(
+                data=prompt,
+                data_type="data",
+            )
         if "token_type_ids" in encoded.keys():
             del encoded["token_type_ids"]
         return {
@@ -97,14 +114,56 @@ class UpStageDialoguesDataset(Dataset):
     def encode_text(
         self,
         data: str,
+        data_type: str,
     ) -> Dict[str, torch.Tensor]:
+        if data_type == "data":
+            if (
+                "bart" in self.pretrained_model_name
+                or "t5" in self.pretrained_model_name
+            ):
+                max_length = self.data_max_length
+            else:
+                if self.split == "predict":
+                    max_length = self.data_max_length
+                else:
+                    max_length = self.data_max_length + self.target_max_length
+        elif data_type == "target":
+            max_length = self.target_max_length
+        else:
+            raise ValueError(f"Inavalid data_type: {data_type}")
         encoded = self.data_encoder(
             data,
             padding="max_length",
-            max_length=self.text_max_length,
+            max_length=max_length,
             truncation=True,
             return_tensors="pt",
             add_special_tokens=True,
         )
         encoded = {k: v.squeeze(0) for k, v in encoded.items()}
         return encoded
+
+    def generate_prompt(
+        self,
+        data: str,
+        label: str,
+    ) -> str:
+        default_system_prompt = "사람들의 대화 내용을 보고 적절히 요약해줘."
+        if self.split == "predict":
+            prompt = f"""### Instruction:
+            {default_system_prompt} 
+
+            ### Input:
+            {data.strip()}
+
+            ### Response:
+            """.strip()
+        else:
+            prompt = f"""### Instruction:
+            {default_system_prompt} 
+
+            ### Input:
+            {data.strip()}
+
+            ### Response:
+            {label} """.strip()
+        return prompt
