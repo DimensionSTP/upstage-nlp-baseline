@@ -12,6 +12,9 @@ import optuna
 from optuna.samplers import TPESampler
 from optuna.pruners import HyperbandPruner
 
+from transformers import BitsAndBytesConfig
+from peft import LoraConfig
+
 from ..architectures.models.huggingface_model import HuggingFaceModel
 from ..architectures.huggingface_architecture import HuggingFaceArchitecture
 
@@ -102,6 +105,14 @@ class HuggingFaceTuner:
 
         model = HuggingFaceModel(
             pretrained_model_name=params["pretrained_model_name"],
+            precision=self.module_params.precision,
+            mode=self.module_params.model_execution_mode,
+            quantization_type=self.module_params.quantization_type,
+            quantization_config=BitsAndBytesConfig(
+                **self.module_params.quantization_config
+            ),
+            peft_type=self.module_params.peft_type,
+            peft_config=LoraConfig(**self.module_params.peft_config),
         )
         architecture = HuggingFaceArchitecture(
             model=model,
@@ -111,6 +122,11 @@ class HuggingFaceTuner:
             t_max=params["t_max"],
             eta_min=params["eta_min"],
             interval=self.module_params.interval,
+            options=self.module_params.options,
+            target_max_length=self.module_params.target_max_length,
+            target_min_length=self.module_params.target_min_length,
+            per_device_save_path=self.module_params.per_device_save_path,
+            target_column_name=self.module_params.target_column_name,
         )
 
         self.logger.log_hyperparams(params)
